@@ -107,7 +107,6 @@ public:
         value = data;
     }
 };
-
 void backtrackingAndPrinting(vector<vector<Cell>> table, string xString, string yString, int dimTableX, int dimTableY);
 int main(int argc, char const *argv[])
 {
@@ -169,6 +168,7 @@ int main(int argc, char const *argv[])
             }
         }
     }
+
     cout << "Substitution Matrix:" << endl;
     for (int i = 0; i < 4; i++)
     {
@@ -181,8 +181,8 @@ int main(int argc, char const *argv[])
     cout << "Gap cost:" << gapCost << endl;
     string xString, yString;
     cout << "Insert first string:\n";
-    //TODO change this for input 
-    getline(cin, xString); 
+    // TODO change this for input
+    getline(cin, xString);
     //xString = "AGGCA";
     cout << "Insert second string:\n";
     getline(cin, yString);
@@ -223,25 +223,41 @@ int main(int argc, char const *argv[])
             }
             else
             {
-                /// improve the code below
-                int valueDiag = table[i - 1][j - 1].getValue() + substitutionMatrix[charToInt(xString[i - 1])][charToInt(yString[j - 1])];
-                int valueTop = table[i - 1][j].getValue() + gapCost;
-                int valueLeft = table[i][j - 1].getValue() + gapCost;
-
-                int minValue = min(valueDiag, min(valueTop, valueLeft));
                 Cell currentCell = table[i][j];
-                // Set the backtrack flags
-                if (minValue == valueDiag)
+                int valueDiag = table[i - 1][j - 1].getValue() + substitutionMatrix[charToInt(xString[i - 1])][charToInt(yString[j - 1])];           
+                int minValue = valueDiag;
+                // calculating the value of the cells in the diagonals
+                if (i == j)
                 {
                     currentCell.setBackTrackDiag();
                 }
-                if (minValue == valueTop)
+                // we have to check all the lower part of the matrix and calculate it
+                if (i > j)
                 {
-                    currentCell.setBackTrackTop();
+                    int valueTop = table[i - 1][j].getValue() + gapCost;
+                    minValue = min(valueTop, valueDiag);
+            
+                    if (minValue == valueDiag)
+                    {
+                        currentCell.setBackTrackDiag();
+                    }
+                    if (minValue == valueTop)
+                    {
+                        currentCell.setBackTrackTop();
+                    }
                 }
-                if (minValue == valueLeft)
-                {
-                    currentCell.setBackTrackLeft();
+                if (i<j){
+
+                    int valueLeft = table[i][j - 1].getValue() + gapCost;
+                    minValue = min(valueLeft, valueDiag);
+                    if (minValue == valueDiag)
+                    {
+                        currentCell.setBackTrackDiag();
+                    }
+                    if (minValue == valueLeft)
+                    {
+                        currentCell.setBackTrackLeft();
+                    }
                 }
 
                 currentCell.setValue(minValue);
@@ -258,9 +274,10 @@ int main(int argc, char const *argv[])
         }
         cout << endl;
     }
+    cout << "Backtrack:" << endl;
     backtrackingAndPrinting(table, xString, yString, dimTableX, dimTableY);
-    
 }
+
 void backtrackingAndPrinting(vector<vector<Cell>> table, string xString, string yString, int dimTableX, int dimTableY){
     //Backtracking
     int i = dimTableX - 1;
