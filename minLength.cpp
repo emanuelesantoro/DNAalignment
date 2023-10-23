@@ -207,13 +207,13 @@ int main(int argc, char const *argv[])
                 {
                     cout << "Enter substitution cost for " << enumToString(i) << " and " << enumToString(j) << ": ";
                     cin >> substitutionMatrix[i][j];
+                    cin.ignore();
                     // Mirror the value to the other half of the matrix for simmetricity
                     substitutionMatrix[j][i] = substitutionMatrix[i][j];
                 }
             }
         }
     }
-
     cout << "Substitution Matrix:" << endl;
     for (int i = 0; i < 4; i++)
     {
@@ -225,11 +225,11 @@ int main(int argc, char const *argv[])
     }
     cout << "Gap cost:" << gapCost << endl;
     string xString, yString;
-    cout << "Insert first string:\n";
+    cout << "Insert first string:" << endl;
     // TODO change this for input
     getline(cin, xString);
     // xString = "AGGCA";
-    cout << "Insert second string:\n";
+    cout << "Insert second string:" << endl;
     getline(cin, yString);
     // yString = "AGGGCT";
     // put in yString the longest string
@@ -299,7 +299,7 @@ int main(int argc, char const *argv[])
     cout << "Final cost : " << table[dimTableX - 1][dimTableY - 1].getValue() << endl;
     backtrackingAndPrinting(table, xString, yString, dimTableX, dimTableY, isSwapped);
     return 0;
-}
+}   
 
 void backtrackingAndPrinting(vector<vector<Cell>> table, string xString, string yString, int dimTableX, int dimTableY, bool isSwapped)
 {
