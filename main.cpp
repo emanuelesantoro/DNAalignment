@@ -3,6 +3,11 @@
 #include <iostream>
 #include <string>
 #include <cstring>
+// ANSI escape codes for colors
+#define ANSI_RESET "\033[0m"
+#define ANSI_RED "\033[31m"
+#define ANSI_WHITE "\033[37m"
+
 using namespace std;
 enum DNA
 {
@@ -50,6 +55,7 @@ class Cell
 {
 private:
     bool flags[3]; // Array of three flags that represent the three backtrack pointer
+    bool isBacktrack;
     int value;
 
 public:
@@ -60,6 +66,7 @@ public:
             flags[i] = false;
         }
         value = 0;
+        isBacktrack = false;
     }
     // Method to set the backtrack diagonal flag to true
     void setBackTrackDiag()
@@ -96,19 +103,56 @@ public:
     {
         return flags[2];
     }
-
+    bool *getFlags()
+    {
+        return flags;
+    }
+    void setFlags(bool diag, bool top, bool left)
+    {
+        flags[0] = diag;
+        flags[1] = top;
+        flags[2] = left;
+    }
     int getValue() const
     {
         return value;
     }
-
     void setValue(int data)
     {
         value = data;
     }
+    void setBacktrack()
+    {
+        isBacktrack = true;
+    }
+    bool getBacktrack()
+    {
+        return isBacktrack;
+    }
 };
 
-void backtrackingAndPrinting(vector<vector<Cell>> table, string xString, string yString, int dimTableX, int dimTableY);
+void backtrackingAndPrinting(vector<vector<Cell>> table, string xString, string yString, int dimTableX, int dimTableY, bool isSwapped);
+
+std::string getArrowChar(bool flags[], bool isBacktrack)
+{
+    const std::string &color = isBacktrack ? ANSI_RED : ANSI_WHITE;
+    if (flags[0])
+    {
+        return color + "↖" + ANSI_RESET;
+    }
+    else if (flags[1])
+    {
+        return color + "↑" + ANSI_RESET;
+    }
+    else if (flags[2])
+    {
+        return color + "←" + ANSI_RESET;
+    }
+    else
+    {
+        return " ";
+    }
+}
 int main(int argc, char const *argv[])
 {
     bool parametricFlag = false;
@@ -163,6 +207,7 @@ int main(int argc, char const *argv[])
                 {
                     cout << "Enter substitution cost for " << enumToString(i) << " and " << enumToString(j) << ": ";
                     cin >> substitutionMatrix[i][j];
+                    cin.ignore();
                     // Mirror the value to the other half of the matrix for simmetricity
                     substitutionMatrix[j][i] = substitutionMatrix[i][j];
                 }
@@ -180,13 +225,22 @@ int main(int argc, char const *argv[])
     }
     cout << "Gap cost:" << gapCost << endl;
     string xString, yString;
-    cout << "Insert first string:\n";
-    //TODO change this for input 
-    getline(cin, xString); 
-    //xString = "AGGCA";
-    cout << "Insert second string:\n";
+    cout << "Insert first string:" << endl;
+    // TODO change this for input
+    getline(cin, xString);
+    // xString = "AGGCA";
+    cout << "Insert second string:" << endl;
     getline(cin, yString);
-    //yString = "AGGGCT";
+    // yString = "AGGGCT";
+    // put in yString the longest string
+    bool isSwapped = false;
+    if (xString.length() > yString.length())
+    {
+        string temp = xString;
+        xString = yString;
+        yString = temp;
+        isSwapped = true;
+    }
 
     // The plus one is needed because we also need to consider the empty string
     int dimTableX = xString.length() + 1;
@@ -249,21 +303,13 @@ int main(int argc, char const *argv[])
             }
         }
     }
-    cout << "Table:" << endl;
-    for (int i = 0; i < dimTableX; i++)
-    {
-        for (int j = 0; j < dimTableY; j++)
-        {
-            cout << (table[i][j].getValue() < 10 ? "| " : "|") << table[i][j].getValue() << "|";
-        }
-        cout << endl;
-    }
     cout << "Final cost : " << table[dimTableX - 1][dimTableY - 1].getValue() << endl;
-    backtrackingAndPrinting(table, xString, yString, dimTableX, dimTableY);
+    backtrackingAndPrinting(table, xString, yString, dimTableX, dimTableY, isSwapped);
     return 0;
 }
-void backtrackingAndPrinting(vector<vector<Cell>> table, string xString, string yString, int dimTableX, int dimTableY){
-    //Backtracking
+void backtrackingAndPrinting(vector<vector<Cell>> table, string xString, string yString, int dimTableX, int dimTableY, bool isSwapped)
+{
+    // Backtracking
     int i = dimTableX - 1;
     int j = dimTableY - 1;
     string xAlignment = "";
@@ -276,6 +322,9 @@ void backtrackingAndPrinting(vector<vector<Cell>> table, string xString, string 
             bool isMatch = xString[i - 1] == yString[j - 1];
             xAlignment = (isMatch ? string(1, xString[i - 1]) : "*") + xAlignment;
             yAlignment = (isMatch ? string(1, yString[j - 1]) : "*") + yAlignment;
+            currentCell.setFlags(true, false, false);
+            currentCell.setBacktrack();
+            table[i][j] = currentCell;
             i--;
             j--;
         }
@@ -283,15 +332,56 @@ void backtrackingAndPrinting(vector<vector<Cell>> table, string xString, string 
         {
             xAlignment = xString[i - 1] + xAlignment;
             yAlignment = "_" + yAlignment;
+            currentCell.setFlags(false, true, false);
+            currentCell.setBacktrack();
+            table[i][j] = currentCell;
             i--;
         }
         else if (currentCell.isBackTrackLeft())
         {
             xAlignment = "_" + xAlignment;
             yAlignment = yString[j - 1] + yAlignment;
+            currentCell.setFlags(false, false, true);
+            currentCell.setBacktrack();
+            table[i][j] = currentCell;
             j--;
         }
     }
-    cout << "X alignment: " << xAlignment << endl;
-    cout << "Y alignment: " << yAlignment << endl;
+    // print table
+    cout << endl;
+    cout << " ";
+    for (int j = 0; j < dimTableY; j++)
+    {
+        if (j == 0)
+            // we have to print the epsilon character
+            cout << "+-"
+                 << "ε"
+                 << "-";
+        else
+            cout << "+-" << yString[j - 1] << "-";
+    }
+    cout << "+" << endl;
+    for (int i = 0; i < dimTableX; i++)
+    {
+        cout<<"+";
+        for (int j = 0; j < dimTableY; j++)
+        {
+            cout << "+---";
+        }
+        cout << "+" << endl;
+
+        if (i == 0)
+            cout << "ε";
+        else
+            cout << xString[i - 1];
+
+        for (int j = 0; j < dimTableY; j++)
+        {
+            cout << "|" << getArrowChar(table[i][j].getFlags(), table[i][j].getBacktrack()) << table[i][j].getValue() << (table[i][j].getValue() < 10 ? " " : "");
+        }
+        cout << "|" << endl;
+    }
+    cout << endl;
+    cout << (isSwapped ? "Y" : "X") << " alignment: " << xAlignment << endl;
+    cout << (isSwapped ? "X" : "Y") << " alignment: " << yAlignment << endl;
 }
