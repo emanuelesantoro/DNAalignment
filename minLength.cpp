@@ -1,13 +1,36 @@
 #include <stdio.h>
 #include <vector>
 #include <iostream>
+#include <fstream>
 #include <string>
 #include <cstring>
 // ANSI escape codes for colors
 #define ANSI_RESET "\033[0m"
-#define ANSI_RED "\033[31m"
-#define ANSI_WHITE "\033[37m"
+#define ANSI_YELLOW "\033[33m" //Yellow color
+#define ANSI_BLACK "\033[30m" // Black color
 
+using namespace std;
+
+std::string getArrowChar(bool flags[], bool isBacktrack)
+{
+    const std::string &color = isBacktrack ? ANSI_YELLOW : ANSI_BLACK; // Use green for isBacktrack, black for default
+    if (flags[0])
+    {
+        return color + "↖" + ANSI_RESET;
+    }
+    else if (flags[1])
+    {
+        return color + "↑" + ANSI_RESET;
+    }
+    else if (flags[2])
+    {
+        return color + "←" + ANSI_RESET;
+    }
+    else
+    {
+        return " ";
+    }
+}
 using namespace std;
 enum DNA
 {
@@ -132,88 +155,41 @@ public:
 };
 
 void backtrackingAndPrinting(vector<vector<Cell>> table, string xString, string yString, int dimTableX, int dimTableY, bool isSwapped);
-
-std::string getArrowChar(bool flags[], bool isBacktrack)
-{
-    const std::string &color = isBacktrack ? ANSI_RED : ANSI_WHITE;
-    if (flags[0])
-    {
-        return color + "↖" + ANSI_RESET;
-    }
-    else if (flags[1])
-    {
-        return color + "↑" + ANSI_RESET;
-    }
-    else if (flags[2])
-    {
-        return color + "←" + ANSI_RESET;
-    }
-    else
-    {
-        return " ";
-    }
-}
 int main(int argc, char const *argv[])
 {
-    bool parametricFlag = false;
+    ifstream inputFile("input.txt"); // Open the input file
 
-    // Iterate through the command-line arguments
-    for (int i = 1; i < argc; ++i)
+    if (!inputFile)
     {
-        if (strcmp(argv[i], "-p") == 0)
-        {
-            parametricFlag = true; // Set the flag to true if "-p" is found
-            break;                 // No need to continue searching
-        }
+        cerr << "Error opening the input file." << endl;
+        return 1;
     }
 
-    int substitutionMatrix[4][4];
+    string xString, yString;
     int gapCost;
-    if (!parametricFlag)
-    {
+    int substitutionMatrix[4][4];
 
-        cout << "Default parameters are being used. Launch with -p to change them" << endl;
-        gapCost = 2;
-        for (int i = 0; i < 4; i++)
-        {
-            for (int j = 0; j <= i; j++)
-            {
-                if (i == j)
-                {
-                    substitutionMatrix[i][j] = 0;
-                }
-                else
-                {
-                    substitutionMatrix[i][j] = 10;
-                    // Mirror the value to the other half of the matrix for simmetricity
-                    substitutionMatrix[j][i] = 10;
-                }
-            }
-        }
-    }
-    else
+    // Read the strings from the file
+    getline(inputFile, xString);
+    xString.erase(xString.find_last_not_of("\r") + 1); // Remove carriage return characters
+
+    getline(inputFile, yString);
+    yString.erase(yString.find_last_not_of("\r") + 1); // Remove carriage return characters
+
+    // Read the gap cost from the file
+    inputFile >> gapCost;
+
+    // Read the substitution matrix from the file
+    for (int i = 0; i < 4; i++)
     {
-        cout << "Insert cost for gap: " << endl;
-        cin >> gapCost;
-        for (int i = 0; i < 4; i++)
+        for (int j = 0; j < 4; j++)
         {
-            for (int j = 0; j <= i; j++)
-            {
-                if (i == j)
-                {
-                    substitutionMatrix[i][j] = 0;
-                }
-                else
-                {
-                    cout << "Enter substitution cost for " << enumToString(i) << " and " << enumToString(j) << ": ";
-                    cin >> substitutionMatrix[i][j];
-                    cin.ignore();
-                    // Mirror the value to the other half of the matrix for simmetricity
-                    substitutionMatrix[j][i] = substitutionMatrix[i][j];
-                }
-            }
+            inputFile >> substitutionMatrix[i][j];
         }
     }
+
+    inputFile.close(); // Close the input file
+
     cout << "Substitution Matrix:" << endl;
     for (int i = 0; i < 4; i++)
     {
@@ -224,14 +200,10 @@ int main(int argc, char const *argv[])
         cout << endl;
     }
     cout << "Gap cost:" << gapCost << endl;
-    string xString, yString;
-    cout << "Insert first string:" << endl;
-    // TODO change this for input
-    getline(cin, xString);
-    // xString = "AGGCA";
-    cout << "Insert second string:" << endl;
-    getline(cin, yString);
-    // yString = "AGGGCT";
+
+    cout << "First string: " << xString << endl;
+    cout << "Second string: " << yString << endl;
+
     // put in yString the longest string
     bool isSwapped = false;
     if (xString.length() > yString.length())
@@ -297,9 +269,10 @@ int main(int argc, char const *argv[])
         }
     }
     backtrackingAndPrinting(table, xString, yString, dimTableX, dimTableY, isSwapped);
-    cout << endl<< "Final cost : " << table[dimTableX - 1][dimTableY - 1].getValue() << endl;
+    cout << endl
+         << "Final cost : " << table[dimTableX - 1][dimTableY - 1].getValue() << endl;
     return 0;
-}   
+}
 
 void backtrackingAndPrinting(vector<vector<Cell>> table, string xString, string yString, int dimTableX, int dimTableY, bool isSwapped)
 {
@@ -357,7 +330,7 @@ void backtrackingAndPrinting(vector<vector<Cell>> table, string xString, string 
     cout << "+" << endl;
     for (int i = 0; i < dimTableX; i++)
     {
-        cout<<"+";
+        cout << "+";
         for (int j = 0; j < dimTableY; j++)
         {
             cout << "+---";

@@ -1,20 +1,18 @@
 #include <iostream>
 #include <string>
-#include <stdio.h>
-using namespace std;
-#include <iostream>
-#include <string>
 #include <cstdlib>
 #include <ctime>
 using namespace std;
 
 int main(int argc, char const *argv[])
 {
-    int n, m;
-    cout << "Insert length of the first string to be generated\n";
-    cin >> n;
-    cout << "Insert length of the second string to be generated\n";
-    cin >> m;
+    if (argc < 3) {
+        cout << "Not enough parameters";
+        return 1;
+    }
+
+    int n = atoi(argv[1]);
+    int m = atoi(argv[2]);
 
     // Seed the random number generator
     srand(time(NULL));

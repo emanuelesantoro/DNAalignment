@@ -4,6 +4,7 @@
         "utility": "cpp",
         "iostream": "cpp",
         "ios": "cpp",
-        "xiosbase": "cpp"
+        "xiosbase": "cpp",
+        "iosfwd": "cpp"
     }
 }
