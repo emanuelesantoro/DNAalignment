@@ -296,8 +296,8 @@ int main(int argc, char const *argv[])
             }
         }
     }
-    cout << "Final cost : " << table[dimTableX - 1][dimTableY - 1].getValue() << endl;
     backtrackingAndPrinting(table, xString, yString, dimTableX, dimTableY, isSwapped);
+    cout << endl<< "Final cost : " << table[dimTableX - 1][dimTableY - 1].getValue() << endl;
     return 0;
 }   
 
